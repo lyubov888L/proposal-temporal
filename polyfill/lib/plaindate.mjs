@@ -18,6 +18,8 @@ import {
   HasSlot
 } from './slots.mjs';
 
+const DISALLOWED_UNITS = ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'];
+
 export class PlainDate {
   constructor(isoYear, isoMonth, isoDay, calendar = ES.GetISO8601Calendar()) {
     isoYear = ES.ToInteger(isoYear);
@@ -135,7 +137,7 @@ export class PlainDate {
 
     let { years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = duration;
     ES.RejectDurationSign(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
-    ({ days } = ES.BalanceDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 'days'));
+    ({ days } = ES.BalanceDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 'day'));
     duration = { years, months, weeks, days };
     return ES.CalendarDateAdd(GetSlot(this, CALENDAR), this, duration, options);
   }
@@ -147,7 +149,7 @@ export class PlainDate {
 
     let { years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = duration;
     ES.RejectDurationSign(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
-    ({ days } = ES.BalanceDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 'days'));
+    ({ days } = ES.BalanceDuration(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 'day'));
     duration = { years: -years, months: -months, weeks: -weeks, days: -days };
     return ES.CalendarDateAdd(GetSlot(this, CALENDAR), this, duration, options);
   }
@@ -163,16 +165,16 @@ export class PlainDate {
     }
 
     options = ES.GetOptionsObject(options);
-    const disallowedUnits = ['hours', 'minutes', 'seconds', 'milliseconds', 'microseconds', 'nanoseconds'];
-    const smallestUnit = ES.ToSmallestTemporalDurationUnit(options, 'days', disallowedUnits);
-    const defaultLargestUnit = ES.LargerOfTwoTemporalDurationUnits('days', smallestUnit);
-    const largestUnit = ES.ToLargestTemporalUnit(options, defaultLargestUnit, disallowedUnits);
+    const smallestUnit = ES.ToSmallestTemporalUnit(options, 'day', DISALLOWED_UNITS);
+    const defaultLargestUnit = ES.LargerOfTwoTemporalUnits('day', smallestUnit);
+    const largestUnit = ES.ToLargestTemporalUnit(options, 'auto', DISALLOWED_UNITS, defaultLargestUnit);
     ES.ValidateTemporalUnitRange(largestUnit, smallestUnit);
     const roundingMode = ES.ToTemporalRoundingMode(options, 'trunc');
     const roundingIncrement = ES.ToTemporalRoundingIncrement(options, undefined, false);
 
-    const result = ES.CalendarDateUntil(calendar, this, other, options);
-    if (smallestUnit === 'days' && roundingIncrement === 1) return result;
+    const untilOptions = { ...options, largestUnit };
+    const result = ES.CalendarDateUntil(calendar, this, other, untilOptions);
+    if (smallestUnit === 'day' && roundingIncrement === 1) return result;
 
     let { years, months, weeks, days } = result;
     const relativeTo = ES.CreateTemporalDateTime(
@@ -219,17 +221,17 @@ export class PlainDate {
     }
 
     options = ES.GetOptionsObject(options);
-    const disallowedUnits = ['hours', 'minutes', 'seconds', 'milliseconds', 'microseconds', 'nanoseconds'];
-    const smallestUnit = ES.ToSmallestTemporalDurationUnit(options, 'days', disallowedUnits);
-    const defaultLargestUnit = ES.LargerOfTwoTemporalDurationUnits('days', smallestUnit);
-    const largestUnit = ES.ToLargestTemporalUnit(options, defaultLargestUnit, disallowedUnits);
+    const smallestUnit = ES.ToSmallestTemporalUnit(options, 'day', DISALLOWED_UNITS);
+    const defaultLargestUnit = ES.LargerOfTwoTemporalUnits('day', smallestUnit);
+    const largestUnit = ES.ToLargestTemporalUnit(options, 'auto', DISALLOWED_UNITS, defaultLargestUnit);
     ES.ValidateTemporalUnitRange(largestUnit, smallestUnit);
     const roundingMode = ES.ToTemporalRoundingMode(options, 'trunc');
     const roundingIncrement = ES.ToTemporalRoundingIncrement(options, undefined, false);
 
-    let { years, months, weeks, days } = ES.CalendarDateUntil(calendar, this, other, options);
+    const untilOptions = { ...options, largestUnit };
+    let { years, months, weeks, days } = ES.CalendarDateUntil(calendar, this, other, untilOptions);
     const Duration = GetIntrinsic('%Temporal.Duration%');
-    if (smallestUnit === 'days' && roundingIncrement === 1) {
+    if (smallestUnit === 'day' && roundingIncrement === 1) {
       return new Duration(-years, -months, -weeks, -days, 0, 0, 0, 0, 0, 0);
     }
     const relativeTo = ES.CreateTemporalDateTime(

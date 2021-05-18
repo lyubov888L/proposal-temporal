@@ -360,9 +360,9 @@ export class ZonedDateTime {
       throw new RangeError(`cannot compute difference between dates of ${calendarId} and ${otherCalendarId} calendars`);
     }
     options = ES.GetOptionsObject(options);
-    const smallestUnit = ES.ToSmallestTemporalDurationUnit(options, 'nanoseconds');
-    const defaultLargestUnit = ES.LargerOfTwoTemporalDurationUnits('hours', smallestUnit);
-    const largestUnit = ES.ToLargestTemporalUnit(options, defaultLargestUnit);
+    const smallestUnit = ES.ToSmallestTemporalUnit(options, 'nanosecond');
+    const defaultLargestUnit = ES.LargerOfTwoTemporalUnits('hour', smallestUnit);
+    const largestUnit = ES.ToLargestTemporalUnit(options, 'auto', [], defaultLargestUnit);
     ES.ValidateTemporalUnitRange(largestUnit, smallestUnit);
     const roundingMode = ES.ToTemporalRoundingMode(options, 'trunc');
     const roundingIncrement = ES.ToTemporalDateTimeRoundingIncrement(options, smallestUnit);
@@ -370,7 +370,7 @@ export class ZonedDateTime {
     const ns1 = GetSlot(this, EPOCHNANOSECONDS);
     const ns2 = GetSlot(other, EPOCHNANOSECONDS);
     let years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds;
-    if (largestUnit !== 'years' && largestUnit !== 'months' && largestUnit !== 'weeks' && largestUnit !== 'days') {
+    if (largestUnit !== 'year' && largestUnit !== 'month' && largestUnit !== 'week' && largestUnit !== 'day') {
       // The user is only asking for a time difference, so return difference of instants.
       years = 0;
       months = 0;
@@ -484,9 +484,9 @@ export class ZonedDateTime {
       throw new RangeError(`cannot compute difference between dates of ${calendarId} and ${otherCalendarId} calendars`);
     }
     options = ES.GetOptionsObject(options);
-    const smallestUnit = ES.ToSmallestTemporalDurationUnit(options, 'nanoseconds');
-    const defaultLargestUnit = ES.LargerOfTwoTemporalDurationUnits('hours', smallestUnit);
-    const largestUnit = ES.ToLargestTemporalUnit(options, defaultLargestUnit);
+    const smallestUnit = ES.ToSmallestTemporalUnit(options, 'nanosecond');
+    const defaultLargestUnit = ES.LargerOfTwoTemporalUnits('hour', smallestUnit);
+    const largestUnit = ES.ToLargestTemporalUnit(options, 'auto', [], defaultLargestUnit);
     ES.ValidateTemporalUnitRange(largestUnit, smallestUnit);
     let roundingMode = ES.ToTemporalRoundingMode(options, 'trunc');
     roundingMode = ES.NegateTemporalRoundingMode(roundingMode);
@@ -495,7 +495,7 @@ export class ZonedDateTime {
     const ns1 = GetSlot(this, EPOCHNANOSECONDS);
     const ns2 = GetSlot(other, EPOCHNANOSECONDS);
     let years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds;
-    if (largestUnit !== 'years' && largestUnit !== 'months' && largestUnit !== 'weeks' && largestUnit !== 'days') {
+    if (largestUnit !== 'year' && largestUnit !== 'month' && largestUnit !== 'week' && largestUnit !== 'day') {
       // The user is only asking for a time difference, so return difference of instants.
       years = 0;
       months = 0;
@@ -613,7 +613,8 @@ export class ZonedDateTime {
     if (!ES.IsTemporalZonedDateTime(this)) throw new TypeError('invalid receiver');
     if (options === undefined) throw new TypeError('options parameter is required');
     options = ES.GetOptionsObject(options);
-    const smallestUnit = ES.ToSmallestTemporalUnit(options);
+    const smallestUnit = ES.ToSmallestTemporalUnit(options, undefined, ['year', 'month', 'week']);
+    if (smallestUnit === undefined) throw new RangeError('smallestUnit is required');
     const roundingMode = ES.ToTemporalRoundingMode(options, 'halfExpand');
     const maximumIncrements = {
       day: 1,
